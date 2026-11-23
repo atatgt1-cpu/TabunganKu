@@ -1,0 +1,6 @@
+{
+  "name": "TabunganSaya",
+  "description": "Aplikasi pencatat tabungan harian ringan, cepat, dan 100% offline-first dengan grafik naik-turun, target tabungan, pengingat harian, serta backup & restore JSON.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

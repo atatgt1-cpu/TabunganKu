@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#F6F7F5" id="meta-theme-color" />
+  <title>TabunganSaya — Pencatat Tabungan Harian</title>
+  <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
+  <link rel="apple-touch-icon" href="./icons/icon-180.png" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem('tabungansaya_v1');
+        var saved = raw ? JSON.parse(raw).theme : null;
+        var theme = saved === 'dark' || saved === 'light'
+          ? saved
+          : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+        var meta = document.getElementById('meta-theme-color');
+        if (meta) meta.setAttribute('content', theme === 'dark' ? '#0D1110' : '#F6F7F5');
+        if (window.TabunganAndroid && typeof window.TabunganAndroid.setTheme === 'function') {
+          window.TabunganAndroid.setTheme(theme);
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Bar (Desktop Nav + Brand) -->
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <img src="./icons/icon.svg" alt="Ikon TabunganSaya" class="brand-mark" width="34" height="34" />
+          <span class="brand-name">TabunganSaya</span>
+          <span class="brand-badge">Offline</span>
+        </div>
+
+        <nav class="desktop-nav" aria-label="Navigasi utama">
+          <button type="button" class="desktop-nav-btn active" data-nav="beranda">Beranda</button>
+          <button type="button" class="desktop-nav-btn" data-nav="riwayat">Riwayat</button>
+          <button type="button" class="desktop-nav-btn" data-nav="target">Target</button>
+          <button type="button" class="desktop-nav-btn" data-nav="pengaturan">Pengaturan</button>
+        </nav>
+
+        <button type="button" class="topbar-add-btn" id="topbar-quick-add">
+          <span aria-hidden="true">+</span> Catat
+        </button>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <!-- TAB 1: BERANDA -->
+      <section class="page-section active" id="page-beranda" aria-label="Beranda">
+        <div class="grid-two-col">
+          <div class="col-stack">
+            <!-- Greeting Card -->
+            <article class="card welcome-card" id="welcome-card">
+              <div id="welcome-expanded">
+                <div class="welcome-hero-wrap">
+                  <img src="./img/piggy-hero.jpg" alt="Ilustrasi celengan keramik hijau" class="welcome-hero-img" id="welcome-hero-img" />
+                </div>
+                <div class="welcome-body">
+                  <div>
+                    <h1 class="welcome-title" id="welcome-greeting-title">Selamat pagi!</h1>
+                    <p class="welcome-sub" id="welcome-greeting-sub">Mulai hari dengan menyisihkan tabungan kecil.</p>
+                  </div>
+                  <button type="button" class="btn-ghost-sm" id="btn-hide-welcome">Sembunyikan</button>
+                </div>
+              </div>
+              <div class="welcome-collapsed-bar" id="welcome-collapsed" style="display:none;">
+                <span class="welcome-sub" style="margin:0; font-weight:600;" id="welcome-compact-greeting">Halo! Tetap semangat menabung.</span>
+                <button type="button" class="btn-ghost-sm" id="btn-show-welcome">Tampilkan sapaan</button>
+              </div>
+            </article>
+
+            <!-- Balance Card -->
+            <article class="card">
+              <div class="balance-label">Total Saldo Tabungan</div>
+              <div class="balance-value" id="home-balance">Rp0</div>
+
+              <div class="quick-actions">
+                <button type="button" class="btn-action btn-deposit" id="btn-home-deposit">
+                  <span aria-hidden="true">+</span> Tabung
+                </button>
+                <button type="button" class="btn-action btn-withdraw" id="btn-home-withdraw">
+                  <span aria-hidden="true">-</span> Ambil
+                </button>
+              </div>
+
+              <div class="stats-row">
+                <div class="stat-box">
+                  <div class="stat-label">Total Masuk</div>
+                  <div class="stat-value pos" id="home-total-deposit">Rp0</div>
+                  <div class="stat-count" id="home-deposit-count">0 transaksi</div>
+                </div>
+                <div class="stat-box">
+                  <div class="stat-label">Total Diambil</div>
+                  <div class="stat-value neg" id="home-total-withdraw">Rp0</div>
+                  <div class="stat-count" id="home-withdraw-count">0 transaksi</div>
+                </div>
+              </div>
+
+              <div class="month-pill" id="home-month-summary">
+                Bulan ini: Rp0 dari 0 hari menabung
+              </div>
+            </article>
+
+            <!-- Goal Summary Card -->
+            <article class="card" id="home-goal-card">
+              <div class="card-header" style="margin-bottom:6px;">
+                <div>
+                  <h2 class="card-title">Target Tabungan</h2>
+                  <p class="card-subtitle" id="home-goal-subtitle">Penanda progres tabunganmu</p>
+                </div>
+                <button type="button" class="btn-ghost-sm" id="btn-home-goal-action">Atur Target</button>
+              </div>
+              <div id="goal-summary-body"></div>
+            </article>
+          </div>
+
+          <div class="col-stack">
+            <!-- Chart Card -->
+            <article class="card">
+              <div class="card-header">
+                <div>
+                  <h2 class="card-title">Grafik Naik Turun</h2>
+                  <p class="card-subtitle" id="chart-range-subtitle">Belum ada transaksi</p>
+                </div>
+              </div>
+
+              <div class="chart-controls">
+                <div class="segmented" role="group" aria-label="Mode grafik">
+                  <button type="button" class="seg-btn active" data-chart-mode="line">Garis Saldo</button>
+                  <button type="button" class="seg-btn" data-chart-mode="bar">Masuk / Keluar</button>
+                </div>
+                <div class="segmented" role="group" aria-label="Rentang waktu grafik">
+                  <button type="button" class="seg-btn active" data-chart-range="7d">7H</button>
+                  <button type="button" class="seg-btn" data-chart-range="30d">30H</button>
+                  <button type="button" class="seg-btn" data-chart-range="all">Semua</button>
+                </div>
+              </div>
+
+              <div id="chart-readout-slot"></div>
+              <div class="chart-wrap" id="chart-svg-slot"></div>
+            </article>
+
+            <!-- Recent Transactions Card -->
+            <article class="card">
+              <div class="card-header">
+                <div>
+                  <h2 class="card-title">Transaksi Terbaru</h2>
+                  <p class="card-subtitle">Maksimal 4 catatan terakhir</p>
+                </div>
+                <button type="button" class="btn-ghost-sm" id="btn-see-all-history">Lihat Semua</button>
+              </div>
+              <div class="tx-list" id="recent-tx-list"></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: RIWAYAT -->
+      <section class="page-section" id="page-riwayat" aria-label="Riwayat">
+        <article class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Riwayat Transaksi</h2>
+              <p class="card-subtitle" id="history-count-subtitle">0 transaksi tercatat</p>
+            </div>
+            <button type="button" class="btn-ghost-sm" id="btn-history-add">+ Catat</button>
+          </div>
+
+          <div class="filters-bar">
+            <div class="segmented" role="group" aria-label="Filter jenis transaksi" style="align-self:flex-start;">
+              <button type="button" class="seg-btn active" data-history-type="all">Semua</button>
+              <button type="button" class="seg-btn" data-history-type="deposit">Masuk</button>
+              <button type="button" class="seg-btn" data-history-type="withdraw">Ambil</button>
+            </div>
+
+            <div class="filters-row">
+              <label class="field-box" aria-label="Cari catatan atau tanggal">
+                <input type="search" id="history-search" placeholder="Cari catatan atau tanggal (mis. 2026-11)..." autocomplete="off" />
+              </label>
+              <label class="field-box" aria-label="Filter bulan">
+                <select id="history-month">
+                  <option value="all">Semua Bulan</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="tx-list" id="history-tx-list"></div>
+          <div id="history-load-more-wrap" style="margin-top:14px; display:none;">
+            <button type="button" class="btn-secondary btn-full" id="btn-history-load-more">Tampilkan lebih banyak</button>
+          </div>
+        </article>
+      </section>
+
+      <!-- TAB 3: TARGET -->
+      <section class="page-section" id="page-target" aria-label="Target">
+        <div class="grid-two-col">
+          <div class="col-stack">
+            <article class="card" id="goal-detail-card"></article>
+          </div>
+
+          <div class="col-stack">
+            <article class="card">
+              <div class="card-header">
+                <div>
+                  <h2 class="card-title" id="goal-form-title">Atur Target Tabungan</h2>
+                  <p class="card-subtitle">Target hanya sebagai penanda progres dan tidak menambah total saldo.</p>
+                </div>
+              </div>
+
+              <form id="goal-form" novalidate>
+                <div class="form-group">
+                  <label class="form-label" for="goal-name-input">
+                    <span>Nama Target</span>
+                    <span id="goal-name-counter">0/60</span>
+                  </label>
+                  <div class="field-box">
+                    <input type="text" id="goal-name-input" maxlength="60" placeholder="Contoh: Dana Darurat, Laptop Baru" autocomplete="off" />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="goal-amount-input">
+                    <span>Nominal Target</span>
+                    <span>Maks 999 miliar</span>
+                  </label>
+                  <div class="field-box">
+                    <span class="field-prefix">Rp</span>
+                    <input type="text" inputmode="numeric" id="goal-amount-input" class="nominal-input" placeholder="0" autocomplete="off" />
+                  </div>
+                </div>
+
+                <div class="error-text" id="goal-form-error" style="display:none; margin-bottom:12px;"></div>
+
+                <div class="btn-row">
+                  <button type="submit" class="btn-primary" id="btn-save-goal">Simpan Target</button>
+                  <button type="button" class="btn-secondary" id="btn-delete-goal" style="display:none; color:var(--neg);">Hapus Target</button>
+                </div>
+              </form>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: PENGATURAN -->
+      <section class="page-section" id="page-pengaturan" aria-label="Pengaturan">
+        <div class="grid-two-col">
+          <div class="col-stack">
+            <!-- Theme -->
+            <article class="card">
+              <div class="card-header" style="margin-bottom:8px;">
+                <div>
+                  <h2 class="card-title">Tampilan</h2>
+                  <p class="card-subtitle">Tersimpan otomatis di perangkat ini</p>
+                </div>
+              </div>
+              <div class="switch-row">
+                <div>
+                  <div style="font-weight:600;">Mode Gelap (Dark Mode)</div>
+                  <div style="font-size:12.5px; color:var(--text-muted);" id="theme-status-label">Aktif: Mode Terang</div>
+                </div>
+                <button type="button" class="toggle-switch" id="toggle-theme" role="switch" aria-checked="false" aria-label="Aktifkan Mode Gelap">
+                  <span class="toggle-thumb"></span>
+                </button>
+              </div>
+            </article>
+
+            <!-- Install / Offline HTML -->
+            <article class="card">
+              <div class="card-header">
+                <div>
+                  <h2 class="card-title">Pasang &amp; Unduh Aplikasi</h2>
+                  <p class="card-subtitle">Gunakan 100% offline tanpa internet</p>
+                </div>
+              </div>
+              <div class="btn-row" style="flex-direction:column;">
+                <button type="button" class="btn-primary btn-full" id="btn-download-offline-html">
+                  Unduh Aplikasi Offline (.html)
+                </button>
+                <button type="button" class="btn-secondary btn-full" id="btn-install-pwa">
+                  Pasang ke Layar Utama
+                </button>
+              </div>
+            </article>
+
+            <!-- Daily Reminder -->
+            <article class="card">
+              <div class="card-header">
+                <div>
+                  <h2 class="card-title">Pengingat Harian</h2>
+                  <p class="card-subtitle">Notifikasi browser atau pengingat dalam aplikasi</p>
+                </div>
+              </div>
+
+              <div class="switch-row" style="margin-bottom:12px;">
+                <div>
+                  <div style="font-weight:600;">Aktifkan Pengingat Harian</div>
+                  <div style="font-size:12.5px; color:var(--text-muted);" id="reminder-permission-status">Status notifikasi siap</div>
+                </div>
+                <button type="button" class="toggle-switch" id="toggle-reminder" role="switch" aria-checked="false" aria-label="Aktifkan Pengingat Harian">
+                  <span class="toggle-thumb"></span>
+                </button>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="reminder-time-input">
+                  <span>Jam Pengingat</span>
+                </label>
+                <div class="field-box">
+                  <input type="time" id="reminder-time-input" value="20:00" />
+                </div>
+              </div>
+
+              <button type="button" class="btn-secondary btn-full" id="btn-test-reminder">
+                Uji Pengingat Sekarang
+              </button>
+            </article>
+          </div>
+
+          <div class="col-stack">
+            <!-- Backup & Restore -->
+            <article class="card">
+              <div class="card-header">
+                <div>
+                  <h2 class="card-title">Backup &amp; Restore Data (.json)</h2>
+                  <p class="card-subtitle">Seluruh data disimpan lokal di perangkatmu</p>
+                </div>
+              </div>
+
+              <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
+                <span class="meta-pill" id="backup-last-pill">Backup terakhir: Belum pernah</span>
+                <span class="meta-pill" id="backup-changes-pill">0 perubahan belum di-backup</span>
+              </div>
+
+              <div class="btn-row" style="margin-bottom:16px;">
+                <button type="button" class="btn-primary" id="btn-download-backup">Unduh Backup (.json)</button>
+                <button type="button" class="btn-secondary" id="btn-copy-backup">Salin Teks Backup</button>
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="form-group" style="margin-bottom:10px;">
+                <span class="form-label">Restore dari File Backup (.json)</span>
+                <input type="file" id="restore-file-input" accept=".json,application/json,text/plain,application/octet-stream" style="display:none;" />
+                <button type="button" class="btn-secondary btn-full" id="btn-pick-restore-file">
+                  Pilih File Restore (.json)
+                </button>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="restore-text-input">
+                  <span>Atau Tempel Teks JSON Backup</span>
+                </label>
+                <textarea id="restore-text-input" class="textarea-box" placeholder='Tempel isi file JSON backup di sini...'></textarea>
+              </div>
+
+              <button type="button" class="btn-secondary btn-full" id="btn-preview-restore-text">
+                Periksa Data Backup
+              </button>
+
+              <div id="restore-preview-slot"></div>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Navigation (Mobile) -->
+    <nav class="bottom-nav" aria-label="Navigasi bawah">
+      <button type="button" class="bottom-nav-btn active" data-nav="beranda">
+        <span class="bottom-nav-pill" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg>
+        </span>
+        <span>Beranda</span>
+      </button>
+      <button type="button" class="bottom-nav-btn" data-nav="riwayat">
+        <span class="bottom-nav-pill" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
+        </span>
+        <span>Riwayat</span>
+      </button>
+      <button type="button" class="bottom-nav-btn" data-nav="target">
+        <span class="bottom-nav-pill" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>
+        </span>
+        <span>Target</span>
+      </button>
+      <button type="button" class="bottom-nav-btn" data-nav="pengaturan">
+        <span class="bottom-nav-pill" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+        </span>
+        <span>Pengaturan</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- MODAL: Catat / Edit Transaksi -->
+  <div class="sheet-backdrop" id="tx-modal" role="dialog" aria-modal="true" aria-labelledby="tx-modal-title">
+    <div class="sheet-panel">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h3 class="sheet-title" id="tx-modal-title">Catat Transaksi</h3>
+        <button type="button" class="btn-ghost-sm" id="btn-close-tx-modal">Tutup</button>
+      </div>
+
+      <form id="tx-form" novalidate>
+        <div class="segmented" role="group" aria-label="Jenis transaksi" style="width:100%; margin-bottom:14px;">
+          <button type="button" class="seg-btn active" data-tx-type="deposit" style="flex:1; min-height:42px;">Tabung (+)</button>
+          <button type="button" class="seg-btn" data-tx-type="withdraw" style="flex:1; min-height:42px;">Ambil (-)</button>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="tx-amount-input">
+            <span>Nominal</span>
+            <span>Maks 999 miliar</span>
+          </label>
+          <div class="field-box">
+            <span class="field-prefix">Rp</span>
+            <input type="text" inputmode="numeric" id="tx-amount-input" class="nominal-input" placeholder="0" autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="chips-row" style="margin-bottom:14px;">
+          <button type="button" class="chip-btn" data-quick-add="5000">+5.000</button>
+          <button type="button" class="chip-btn" data-quick-add="10000">+10.000</button>
+          <button type="button" class="chip-btn" data-quick-add="20000">+20.000</button>
+          <button type="button" class="chip-btn" data-quick-add="50000">+50.000</button>
+          <button type="button" class="chip-btn" data-quick-add="100000">+100.000</button>
+          <button type="button" class="chip-btn" id="btn-quick-reset">Reset</button>
+        </div>
+
+        <div class="warning-banner" id="tx-overdraft-warning" style="display:none;">
+          Pengambilan melebihi total saldo saat ini. Kamu tetap bisa menyimpannya jika memang dibutuhkan.
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="tx-date-input">
+            <span>Tanggal</span>
+          </label>
+          <div class="field-box">
+            <input type="date" id="tx-date-input" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="tx-note-input">
+            <span>Catatan (opsional)</span>
+            <span id="tx-note-counter">0/120</span>
+          </label>
+          <div class="field-box">
+            <input type="text" id="tx-note-input" maxlength="120" placeholder="Mis. Sisihan uang jajan, bonus" autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="error-text" id="tx-form-error" style="display:none; margin-bottom:12px;"></div>
+
+        <button type="submit" class="btn-primary btn-full" id="btn-save-tx">Simpan Catatan</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Konfirmasi Hapus Kustom (Tanpa alert/confirm) -->
+  <div class="sheet-backdrop" id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <div class="sheet-panel">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h3 class="sheet-title" id="confirm-title">Konfirmasi Hapus</h3>
+        <button type="button" class="btn-ghost-sm" id="btn-confirm-cancel">Batal</button>
+      </div>
+      <p id="confirm-message" style="margin:0 0 18px; color:var(--text-muted); font-size:14px;"></p>
+      <div class="btn-row">
+        <button type="button" class="btn-secondary" id="btn-confirm-no">Batal</button>
+        <button type="button" class="btn-danger" id="btn-confirm-yes">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Panduan Pasang Aplikasi -->
+  <div class="sheet-backdrop" id="install-modal" role="dialog" aria-modal="true" aria-labelledby="install-title">
+    <div class="sheet-panel">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h3 class="sheet-title" id="install-title">Pasang ke Layar Utama</h3>
+        <button type="button" class="btn-ghost-sm" id="btn-close-install">Tutup</button>
+      </div>
+      <div style="font-size:14px; color:var(--text-muted); display:flex; flex-direction:column; gap:10px; margin-bottom:16px;">
+        <div><strong>Android (Chrome / Edge):</strong> Ketuk menu titik tiga di pojok kanan atas browser, lalu pilih <strong>Tambahkan ke Layar Utama</strong> atau <strong>Instal Aplikasi</strong>.</div>
+        <div><strong>iPhone / iPad (Safari):</strong> Ketuk ikon <strong>Bagikan (Share)</strong> di bagian bawah Safari, lalu pilih <strong>Tambah ke Layar Utama</strong>.</div>
+        <div><strong>Alternatif Offline:</strong> Gunakan tombol <strong>Unduh Aplikasi Offline (.html)</strong> agar seluruh aplikasi tersimpan sebagai 1 file mandiri.</div>
+      </div>
+      <button type="button" class="btn-primary btn-full" id="btn-copy-app-link">Salin Link Aplikasi</button>
+    </div>
+  </div>
+
+  <!-- Toast + Undo -->
+  <div class="toast-container" aria-live="polite">
+    <div class="toast" id="app-toast">
+      <span id="toast-message"></span>
+      <button type="button" class="toast-action" id="toast-action-btn" style="display:none;"></button>
+    </div>
+  </div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
