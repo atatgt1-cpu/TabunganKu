@@ -2,7 +2,6 @@ name: Build Signed Release APK
 
 on:
   push:
-    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
@@ -21,10 +20,10 @@ jobs:
 
       - name: Install Android SDK 34 components & write local.properties
         run: |
-          SDK_DIR="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          SDK_DIR="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
           SDKMANAGER=$(command -v sdkmanager || find "$SDK_DIR/cmdline-tools" -name sdkmanager -type f 2>/dev/null | head -n 1)
-          yes | "$SDKMANAGER" --licenses > /dev/null 2>&1 || true
-          "$SDKMANAGER" \
+          yes | "$SDKMANAGER" --sdk_root="$SDK_DIR" --licenses > /dev/null 2>&1 || true
+          "$SDKMANAGER" --sdk_root="$SDK_DIR" \
             "platform-tools" \
             "platforms;android-34" \
             "build-tools;34.0.0"

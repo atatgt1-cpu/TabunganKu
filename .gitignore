@@ -16,3 +16,8 @@
 local.properties
 .env
 debug.keystore
+android/build/
+android/app/build/
+android/.gradle/
+android/local.properties
+android/app/release.jks

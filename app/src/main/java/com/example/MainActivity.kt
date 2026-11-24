@@ -249,7 +249,11 @@ class MainActivity : ComponentActivity() {
         } else {
           null
         }
-      WebResourceResponse(mimeType, encoding, stream)
+      val headers = mapOf(
+        "Access-Control-Allow-Origin" to "*",
+        "Cache-Control" to "no-cache"
+      )
+      WebResourceResponse(mimeType, encoding, 200, "OK", headers, stream)
     } catch (_: Exception) {
       null
     }
