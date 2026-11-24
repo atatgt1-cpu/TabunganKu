@@ -420,11 +420,15 @@ export function renderSavingsChart({
       const upCls = animateTransition ? 'chart-bar-rect chart-bar-up is-entering' : 'chart-bar-rect chart-bar-up';
       const dnCls = animateTransition ? 'chart-bar-rect chart-bar-down is-entering' : 'chart-bar-rect chart-bar-down';
 
+      const finalUpH = Math.max(3, upH);
+      const finalUpY = zeroY - 1 - finalUpH;
+      const finalDnH = Math.max(3, dnH);
+
       return `
         <g class="chart-hit" data-idx="${d.index}" style="cursor:pointer;">
           ${isSel ? `<rect x="${(d.x - barW / 2 - 5).toFixed(1)}" y="${padTop}" width="${(barW + 10).toFixed(1)}" height="${plotH}" rx="8" fill="var(--accent)" opacity="0.09" />` : ''}
-          ${d.deposit > 0 ? `<rect class="${upCls}" style="${transStyle}" x="${bx.toFixed(1)}" y="${upY.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(3, upH).toFixed(1)}" rx="5" fill="url(#tsBarPos)" opacity="${isSel ? '1' : '0.82'}" />` : ''}
-          ${d.withdraw > 0 ? `<rect class="${dnCls}" style="${transStyle}" x="${bx.toFixed(1)}" y="${dnY.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(3, dnH).toFixed(1)}" rx="5" fill="url(#tsBarNeg)" opacity="${isSel ? '1' : '0.82'}" />` : ''}
+          ${d.deposit > 0 ? `<rect class="${upCls}" style="${transStyle}" x="${bx.toFixed(1)}" y="${finalUpY.toFixed(1)}" width="${barW.toFixed(1)}" height="${finalUpH.toFixed(1)}" rx="5" fill="url(#tsBarPos)" opacity="${isSel ? '1' : '0.82'}" />` : ''}
+          ${d.withdraw > 0 ? `<rect class="${dnCls}" style="${transStyle}" x="${bx.toFixed(1)}" y="${dnY.toFixed(1)}" width="${barW.toFixed(1)}" height="${finalDnH.toFixed(1)}" rx="5" fill="url(#tsBarNeg)" opacity="${isSel ? '1' : '0.82'}" />` : ''}
           <rect x="${hitX.toFixed(1)}" y="${padTop}" width="${slotW.toFixed(1)}" height="${plotH}" fill="transparent" />
         </g>
       `;

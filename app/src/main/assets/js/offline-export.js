@@ -61,6 +61,17 @@ export async function buildStandaloneOfflineHtml() {
     brandImg.setAttribute('src', iconDataUrl);
   }
 
+  // Reset active tab and nav to Beranda for clean initial open
+  htmlClone.querySelectorAll('.page-section').forEach((sec) => {
+    sec.classList.toggle('active', sec.id === 'page-beranda');
+  });
+  htmlClone.querySelectorAll('[data-nav]').forEach((btn) => {
+    btn.classList.toggle('active', btn.getAttribute('data-nav') === 'beranda');
+  });
+  htmlClone.querySelectorAll('.sheet-backdrop.open').forEach((m) => m.classList.remove('open'));
+  const toastEl = htmlClone.querySelector('#app-toast');
+  if (toastEl) toastEl.classList.remove('show');
+
   // Clear dynamic list containers so script boots cleanly from localStorage
   ['recent-tx-list', 'history-tx-list', 'chart-readout-slot', 'chart-svg-slot', 'goal-summary-body', 'goal-detail-card', 'restore-preview-slot'].forEach((id) => {
     const el = htmlClone.querySelector(`#${id}`);

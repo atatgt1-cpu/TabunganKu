@@ -938,7 +938,13 @@ function initEvents() {
     try {
       let htmlString;
       if (window.__TABUNGAN_STANDALONE__) {
-        htmlString = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+        const clone = document.documentElement.cloneNode(true);
+        clone.querySelectorAll('.page-section').forEach((s) => s.classList.toggle('active', s.id === 'page-beranda'));
+        clone.querySelectorAll('[data-nav]').forEach((b) => b.classList.toggle('active', b.getAttribute('data-nav') === 'beranda'));
+        clone.querySelectorAll('.sheet-backdrop.open').forEach((m) => m.classList.remove('open'));
+        const t = clone.querySelector('#app-toast');
+        if (t) t.classList.remove('show');
+        htmlString = '<!DOCTYPE html>\n' + clone.outerHTML;
       } else {
         htmlString = await buildStandaloneOfflineHtml();
       }
@@ -1108,13 +1114,14 @@ function initEvents() {
 }
 
 function registerServiceWorker() {
-  if (window.__TABUNGAN_STANDALONE__) return;
+  if (window.__TABUNGAN_STANDALONE__ || window.TabunganAndroid) return;
   if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
 }
 
 function bootstrap() {
+  switchTab('beranda');
   initEvents();
   renderAll();
   registerServiceWorker();
